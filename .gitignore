@@ -127,3 +127,7 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+*.onnx
+testsrc.mp4.lwi
+1.mp4.lwi
+test.engine

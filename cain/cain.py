@@ -308,12 +308,23 @@ class CAIN(nn.Module):
     def forward(self, x2):
         x2 = kornia.color.rgb_to_yuv(x2)
         x2, x1 = torch.split(x2, int(x2.shape[3] / 2), dim=3)
+        padding=0
+        if x1.shape[3]%8==0:
+            pass
+        else:
+            print()
+            padding=(8-x1.shape[3]%8)
+            respad=torch.nn.ZeroPad2d([0, padding])
+            x1=respad(x1)
+            x2=respad(x2)
+            print(x2.shape)
         x1, m1 = sub_mean(x1)
         x2, m2 = sub_mean(x2)
         out = self.decoder(self.encoder(x1, x2))
         mi = (m1 + m2) / 2
         out += mi
-        padding = torch.nn.ZeroPad2d([0, x2.shape[3]])
+        
+        padding = torch.nn.ZeroPad2d([0, x2.shape[3]-padding*2])
         out = padding(out)
         out = kornia.color.yuv_to_rgb(out)
         return out
