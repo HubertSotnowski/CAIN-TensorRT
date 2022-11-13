@@ -16,6 +16,10 @@ model.load_state_dict(torch.load(args.input), strict=False)
 input_names = ["input"]
 output_names = ["output"]
 f1 = torch.rand((1, 3, args.height, args.width * 2))
+x = f1
+
+torch.onnx.export(
+    model,  # model being run
     x,  # model input (or a tuple for multiple inputs)
     "cain-temp.onnx",  # where to save the model (can be a file or file-like object)
     export_params=True,  # store the trained parameter weights inside the model file
