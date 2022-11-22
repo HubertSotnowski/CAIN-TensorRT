@@ -26,7 +26,8 @@ torch.onnx.export(
     opset_version=16,  # the ONNX version to export the model to
     do_constant_folding=True,  # whether to execute constant folding for optimization
     input_names=input_names,  # the model's input names
-    output_names=output_names)
+    output_names=output_names,
+                   dynamic_axes={'input' : {3 : 'width', 2: 'height'}})
 del model
 os.system("python3 -m onnxsim cain-temp.onnx cain-sim.onnx")
 os.system(
