@@ -15,7 +15,7 @@ model = CAIN(3)
 model.load_state_dict(torch.load(args.input), strict=False)
 input_names = ["input"]
 output_names = ["output"]
-f1 = torch.rand((1, 3, args.height, args.width * 2))
+f1 = torch.rand((1, 6, args.height, args.width))
 x = f1
 
 torch.onnx.export(
@@ -23,11 +23,10 @@ torch.onnx.export(
     x,  # model input (or a tuple for multiple inputs)
     "cain-temp.onnx",  # where to save the model (can be a file or file-like object)
     export_params=True,  # store the trained parameter weights inside the model file
-    opset_version=15,  # the ONNX version to export the model to
+    opset_version=16,  # the ONNX version to export the model to
     do_constant_folding=True,  # whether to execute constant folding for optimization
     input_names=input_names,  # the model's input names
-    output_names=output_names,
-)  #                  dynamic_axes={'input' : {3 : 'width', 2: 'height'}})
+    output_names=output_names)
 del model
 os.system("python3 -m onnxsim cain-temp.onnx cain-sim.onnx")
 os.system(

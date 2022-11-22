@@ -220,38 +220,6 @@ class Interpolation(nn.Module):
         return out
 
 
-def pixel_shuffle(input, scale_factor):
-    batch_size, channels, in_height, in_width = input.size()
-
-    out_channels = int(int(channels / scale_factor) / scale_factor)
-    out_height = int(in_height * scale_factor)
-    out_width = int(in_width * scale_factor)
-
-    if scale_factor >= 1:
-        input_view = input.contiguous().view(
-            batch_size, out_channels, scale_factor, scale_factor, in_height, in_width
-        )
-        shuffle_out = input_view.permute(0, 1, 4, 2, 5, 3).contiguous()
-    else:
-        block_size = int(1 / scale_factor)
-        input_view = input.contiguous().view(
-            batch_size, channels, out_height, block_size, out_width, block_size
-        )
-        shuffle_out = input_view.permute(0, 1, 3, 5, 2, 4).contiguous()
-
-    return shuffle_out.view(batch_size, out_channels, out_height, out_width)
-
-
-class PixelShuffle(nn.Module):
-    def __init__(self, scale_factor):
-        super(PixelShuffle, self).__init__()
-        self.scale_factor = scale_factor
-
-    def forward(self, x):
-        return pixel_shuffle(x, self.scale_factor)
-
-    def extra_repr(self):
-        return "scale_factor={}".format(self.scale_factor)
 
 
 def sub_mean(x):
@@ -267,7 +235,7 @@ class Encoder(nn.Module):
         # Shuffle pixels to expand in channel dimension
         # shuffler_list = [PixelShuffle(0.5) for i in range(depth)]
         # self.shuffler = nn.Sequential(*shuffler_list)
-        self.shuffler = PixelShuffle(1 / 2**depth)
+        self.shuffler = torch.nn.PixelUnshuffle(2**depth)
 
         relu = nn.LeakyReLU(0.2, True)
 
@@ -292,7 +260,7 @@ class Decoder(nn.Module):
 
         # shuffler_list = [PixelShuffle(2) for i in range(depth)]
         # self.shuffler = nn.Sequential(*shuffler_list)
-        self.shuffler = PixelShuffle(2**depth)
+        self.shuffler = torch.nn.PixelShuffle(2**depth)
 
     def forward(self, feats):
         out = self.shuffler(feats)
@@ -306,25 +274,21 @@ class CAIN(nn.Module):
         self.decoder = Decoder(depth=depth)
 
     def forward(self, x2):
-        x2 = kornia.color.rgb_to_yuv(x2)
-        x2, x1 = torch.split(x2, int(x2.shape[3] / 2), dim=3)
-        padding=0
-        if x1.shape[3]%8==0:
-            pass
-        else:
-            print()
-            padding=(8-x1.shape[3]%8)
-            respad=torch.nn.ZeroPad2d([0, padding])
-            x1=respad(x1)
-            x2=respad(x2)
-            print(x2.shape)
+        
+        x2, x1 = torch.split(x2, 3, dim=1)
+        #x2 = kornia.color.rgb_to_yuv(x2)
+        #x1 = kornia.color.rgb_to_yuv(x1)
+        padding=(8-x1.shape[3]%8)
+        respad=torch.nn.ZeroPad2d([0, padding])
+        x1=respad(x1)
+        x2=respad(x2)
         x1, m1 = sub_mean(x1)
         x2, m2 = sub_mean(x2)
         out = self.decoder(self.encoder(x1, x2))
         mi = (m1 + m2) / 2
         out += mi
         
-        padding = torch.nn.ZeroPad2d([0, x2.shape[3]-padding*2])
-        out = padding(out)
-        out = kornia.color.yuv_to_rgb(out)
+        #padding = torch.nn.ZeroPad2d([0, x2.shape[3]-padding*2])
+        #out = padding(out)
+        #out = kornia.color.yuv_to_rgb(out)
         return out
