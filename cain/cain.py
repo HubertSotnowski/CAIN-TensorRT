@@ -200,7 +200,7 @@ class Interpolation(nn.Module):
                 act=act,
                 norm=norm,
             )
-            for _ in range(3)
+            for _ in range(2)
         ]
         self.body = nn.Sequential(*modules_body)
 
@@ -278,6 +278,7 @@ class CAIN(nn.Module):
         x2, x1 = torch.split(x2, 3, dim=1)
         #x2 = kornia.color.rgb_to_yuv(x2)
         #x1 = kornia.color.rgb_to_yuv(x1)
+        width=x1.shape[3]
         padding=(8-x1.shape[3]%8)
         respad=torch.nn.ZeroPad2d([0, padding])
         x1=respad(x1)
@@ -291,4 +292,4 @@ class CAIN(nn.Module):
         #padding = torch.nn.ZeroPad2d([0, x2.shape[3]-padding*2])
         #out = padding(out)
         #out = kornia.color.yuv_to_rgb(out)
-        return out
+        return out[:,:,0:width]
