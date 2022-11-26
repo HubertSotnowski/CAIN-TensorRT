@@ -27,9 +27,9 @@ torch.onnx.export(
     do_constant_folding=True,  # whether to execute constant folding for optimization
     input_names=input_names,  # the model's input names
     output_names=output_names,
-                   dynamic_axes={'input' : {3 : 'width', 2: 'height'}})
+    dynamic_axes={'input' : {3 : 'width', 2: 'height'}} )#
 del model
 os.system("python3 -m onnxsim cain-temp.onnx cain-sim.onnx")
 os.system(
-    f"polygraphy convert cain-sim.onnx --fp16 --convert-to trt  --workspace 10737418240 -o {args.output}"
+    f" trtexec --onnx=cain-sim.onnx --optShapes=input:1x6x{args.height}x{args.width} --fp16 --saveEngine={args.output}"
 )

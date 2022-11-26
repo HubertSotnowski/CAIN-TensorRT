@@ -13,6 +13,6 @@ clip_pos2 = clip.std.Trim(first=1)
 print(clip_pos2.frames)
 clipstack =  [clip_pos1,clip_pos2]
 output = core.trt.Model(clipstack, engine_path=f"2.engine",num_streams=8)
-output=core.std.Interleave([output,clip])
+output=core.std.Interleave([clip,output])
 output = vs.core.resize.Bicubic(output, format=vs.YUV420P8, matrix_s="709")
 output.set_output()

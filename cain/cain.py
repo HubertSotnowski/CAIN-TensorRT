@@ -288,8 +288,8 @@ class CAIN(nn.Module):
         out = self.decoder(self.encoder(x1, x2))
         mi = (m1 + m2) / 2
         out += mi
-        
-        #padding = torch.nn.ZeroPad2d([0, x2.shape[3]-padding*2])
+        out=out[:,:,:,0:width]
+        padding = torch.nn.ZeroPad2d([0, x2.shape[3]-padding*2])
         #out = padding(out)
         #out = kornia.color.yuv_to_rgb(out)
-        return out[:,:,0:width]
+        return out
